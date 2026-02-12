@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2020 Oliver Nash. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Oliver Nash
+Authors: Oliver Nash, Jonathan Reich
 -/
 module
 
@@ -10,6 +10,9 @@ public import Mathlib.Algebra.Lie.Abelian
 public import Mathlib.LinearAlgebra.Matrix.Trace
 public import Mathlib.Algebra.Lie.SkewAdjoint
 public import Mathlib.LinearAlgebra.SymplecticGroup
+public import Mathlib.LinearAlgebra.Dimension.Constructions
+public import Mathlib.LinearAlgebra.Dimension.Finrank
+public import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 
 /-!
 # Classical Lie algebras
@@ -148,6 +151,20 @@ theorem sl_non_abelian [Fintype n] [Nontrivial R] (h : 1 < Fintype.card n) :
   have c' : A.val * B.val = B.val * A.val := by
     rw [← sub_eq_zero, ← sl_bracket, c.trivial, ZeroMemClass.coe_zero]
   simpa [A, B, Matrix.single, Matrix.mul_apply, hij.symm] using congr_fun (congr_fun c' i) i
+
+
+open Module in
+/-- The special linear Lie algebra `sl(n, K)` has dimension `n² - 1`. -/
+theorem finrank_sl [Fintype n] [Nonempty n] (K : Type*) [Field K] :
+    Module.finrank K (sl n K) = Fintype.card n ^ 2 - 1 := by
+  change Module.finrank K (sl n K).toSubmodule = _
+  simp only [sl]
+  rw [sq]
+  have := (Matrix.traceLinearMap n K K).finrank_range_add_finrank_ker
+  rw [show (Matrix.traceLinearMap n K K).range = ⊤ from
+      LinearMap.range_eq_top.mpr fun r => Matrix.trace_surjective r,
+    finrank_top, finrank_self, finrank_matrix, finrank_self, mul_one] at this
+  omega
 
 end SpecialLinear
 
